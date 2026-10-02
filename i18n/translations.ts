@@ -43,17 +43,50 @@ export const contentTranslations = {
     intro: "Android developer crafting reliable, elegant mobile products with Kotlin, Jetpack Compose and scalable architecture.",
     about: "I design and engineer Android applications that feel native, fast and thoughtfully composed. From product architecture to the smallest motion detail, every decision is made to create software people trust and enjoy using.",
     philosophy: "Complex engineering. Effortless experience.",
+    projects: [
+      { category: "Personal finance", summary: "A calm personal finance companion with instant insights, smart budgets and secure offline-first data." },
+      { category: "Travel & discovery", summary: "An adaptive travel companion that keeps routes, places and essential trip details available everywhere." },
+      { category: "Health technology", summary: "A privacy-minded wellbeing tracker designed around useful patterns instead of overwhelming metrics." },
+    ],
+    experience: [
+      { role: "Senior Android Developer", companyAbout: "A focused mobile product practice partnering with ambitious digital teams.", summary: "Leading Android products from architecture and design systems to store-ready delivery, observability and iterative growth." },
+      { role: "Android Developer", companyAbout: "A multidisciplinary studio building consumer and enterprise mobile applications.", summary: "Built modular Kotlin applications, migrated legacy screens to Compose and improved release reliability across multiple products." },
+      { role: "Junior Android Engineer", companyAbout: "Product engineering team delivering connected services for regional businesses.", summary: "Delivered core application features, offline-first data flows, API integrations and a reusable UI component library." },
+    ],
+    education: [{ degree: "BSc, Software Engineering", note: "Software architecture, distributed systems and human-computer interaction." }, { degree: "Continuous Learning", note: "Creative coding, real-time graphics, product strategy and emerging web standards." }],
   },
   uz: {
     role: "Android Product Engineer", heroLead: "Android mahsulotlar.", heroAccent: "Har bir harakat tabiiy va oson.",
     intro: "Kotlin, Jetpack Compose va kengayuvchan arxitektura yordamida ishonchli va nafis mobil mahsulotlar yaratuvchi Android dasturchi.",
     about: "Men tez, tabiiy va puxta o‘ylangan Android ilovalarni loyihalayman va ishlab chiqaman. Mahsulot arxitekturasidan eng kichik animatsiyagacha — har bir qaror odamlar ishonadigan va zavq bilan ishlatadigan dastur yaratishga xizmat qiladi.",
     philosophy: "Murakkab muhandislik. Oson tajriba.",
+    projects: [
+      { category: "Shaxsiy moliya", summary: "Tezkor tahlil, aqlli budjet va xavfsiz offline ma’lumotlarga ega sodda moliyaviy yordamchi." },
+      { category: "Sayohat va kashfiyot", summary: "Yo‘nalishlar, joylar va muhim sayohat ma’lumotlarini istalgan joyda saqlaydigan moslashuvchan yordamchi." },
+      { category: "Sog‘liq texnologiyasi", summary: "Ortiqcha raqamlar o‘rniga foydali odat va tendensiyalarni ko‘rsatadigan maxfiylikka yo‘naltirilgan kuzatuvchi." },
+    ],
+    experience: [
+      { role: "Senior Android Developer", companyAbout: "Kuchli raqamli jamoalar bilan ishlaydigan mobil mahsulot laboratoriyasi.", summary: "Android mahsulotlarini arxitektura va dizayn tizimidan store relizi, monitoring hamda rivojlantirishgacha boshqaraman." },
+      { role: "Android Developer", companyAbout: "B2C va korporativ mobil ilovalar yaratuvchi ko‘p yo‘nalishli studio.", summary: "Modulli Kotlin ilovalari yaratdim, eski ekranlarni Compose’ga ko‘chirdim va relizlar barqarorligini oshirdim." },
+      { role: "Junior Android Engineer", companyAbout: "Hududiy bizneslar uchun bog‘langan xizmatlar ishlab chiquvchi mahsulot jamoasi.", summary: "Asosiy funksiyalar, offline-first ma’lumot oqimlari, API integratsiyalari va qayta ishlatiladigan UI kutubxonasini yaratdim." },
+    ],
+    education: [{ degree: "Dasturiy injiniring bakalavri", note: "Dasturiy arxitektura, taqsimlangan tizimlar va inson-kompyuter o‘zaro aloqasi." }, { degree: "Doimiy ta’lim", note: "Creative coding, real-time grafika, mahsulot strategiyasi va yangi web standartlari." }],
   },
   ru: {
     role: "Android Product Engineer", heroLead: "Android-продукты.", heroAccent: "Сложные внутри, простые снаружи.",
     intro: "Android-разработчик, создающий надежные и элегантные мобильные продукты на Kotlin, Jetpack Compose и масштабируемой архитектуре.",
     about: "Я проектирую Android-приложения, которые ощущаются быстрыми, нативными и продуманными. От архитектуры продукта до мельчайшей анимации — каждое решение помогает создавать программы, которым доверяют и которыми приятно пользоваться.",
     philosophy: "Сложная инженерия. Легкий опыт.",
+    projects: [
+      { category: "Личные финансы", summary: "Спокойный финансовый помощник с быстрыми подсказками, умными бюджетами и безопасной offline-first архитектурой." },
+      { category: "Путешествия", summary: "Адаптивный гид, который сохраняет маршруты, места и важные детали поездки доступными везде." },
+      { category: "Health-tech", summary: "Приватный трекер самочувствия, сфокусированный на полезных закономерностях, а не на перегрузке метриками." },
+    ],
+    experience: [
+      { role: "Senior Android Developer", companyAbout: "Мобильная продуктовая лаборатория для амбициозных цифровых команд.", summary: "Веду Android-продукты от архитектуры и дизайн-систем до публикации, наблюдаемости и развития продукта." },
+      { role: "Android Developer", companyAbout: "Мультидисциплинарная студия мобильных приложений для пользователей и бизнеса.", summary: "Создавал модульные Kotlin-приложения, переносил legacy-экраны на Compose и повышал надежность релизов." },
+      { role: "Junior Android Engineer", companyAbout: "Продуктовая команда, создающая цифровые сервисы для регионального бизнеса.", summary: "Разрабатывал ключевые функции, offline-first потоки данных, API-интеграции и библиотеку UI-компонентов." },
+    ],
+    education: [{ degree: "Бакалавр программной инженерии", note: "Архитектура ПО, распределенные системы и взаимодействие человека с компьютером." }, { degree: "Непрерывное обучение", note: "Creative coding, графика реального времени, продуктовая стратегия и новые веб-стандарты." }],
   },
 } as const;

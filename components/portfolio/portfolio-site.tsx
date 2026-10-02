@@ -81,7 +81,7 @@ export function PortfolioSite() {
 
     <section id="work" className="section work-section android-work">
       <div className="section-heading reveal"><p className="eyebrow"><span>03</span>{t.projects}</p><h2>{t.projectsTitle}<br /><em>{t.projectsAccent}</em></h2></div>
-      <div className="app-case-list">{content.projects.map((project, index) => <AppProjectCard project={project} index={index} hint={t.projectHint} viewLabel={t.viewCase} key={`${project.title}-${index}`} />)}</div>
+      <div className="app-case-list">{content.projects.map((project, index) => <AppProjectCard project={{ ...project, category: localized.projects[index]?.category ?? project.category, summary: localized.projects[index]?.summary ?? project.summary }} index={index} hint={t.projectHint} viewLabel={t.viewCase} key={`${project.title}-${index}`} />)}</div>
     </section>
 
     <section id="experience" className="section experience-section">
@@ -89,7 +89,7 @@ export function PortfolioSite() {
       <div className="experience-rail">
         {content.experience.map((item, index) => <article className={`experience-card reveal ${index === 0 ? "current" : ""}`} key={`${item.role}-${index}`}>
           <div className="experience-side"><span className="company-logo">{item.logo ?? item.company.slice(0, 2)}</span><span className="experience-index">0{index + 1}</span></div>
-          <div className="experience-main"><div className="experience-meta"><span>{item.period}</span><span>{item.duration}</span><span>{item.location}</span></div><h3>{item.role}</h3><a href={item.companyUrl ?? "#"} className="experience-company">{item.company}<ArrowUpRight size={16} /></a><p className="company-about">{item.companyAbout}</p><p className="experience-summary">{item.summary}</p></div>
+          <div className="experience-main"><div className="experience-meta"><span>{item.period}</span><span>{item.duration}</span><span>{item.location}</span></div><h3>{localized.experience[index]?.role ?? item.role}</h3><a href={item.companyUrl ?? "#"} className="experience-company">{item.company}<ArrowUpRight size={16} /></a><p className="company-about">{localized.experience[index]?.companyAbout ?? item.companyAbout}</p><p className="experience-summary">{localized.experience[index]?.summary ?? item.summary}</p></div>
           {index === 0 && <span className="current-badge"><i />{t.present}</span>}
         </article>)}
       </div>
@@ -102,7 +102,7 @@ export function PortfolioSite() {
 
     <section id="education" className="section education-section android-education">
       <div className="section-index reveal"><p className="eyebrow"><span>06</span>{t.education}</p><p>{t.educationHint}</p></div>
-      <div className="education-grid">{content.education.map((item, index) => <article className="education-card reveal" key={`${item.degree}-${index}`}><div className="education-number">0{index + 1}</div><span>{item.period}</span><h3>{item.degree}</h3><p className="company">{item.school}</p><p>{item.note}</p><div className="education-line" /></article>)}</div>
+      <div className="education-grid">{content.education.map((item, index) => <article className="education-card reveal" key={`${item.degree}-${index}`}><div className="education-number">0{index + 1}</div><span>{item.period}</span><h3>{localized.education[index]?.degree ?? item.degree}</h3><p className="company">{item.school}</p><p>{localized.education[index]?.note ?? item.note}</p><div className="education-line" /></article>)}</div>
     </section>
 
     <footer id="contact" className="contact-section android-contact"><div className="contact-glow" /><div className="contact-code" aria-hidden="true">&lt;/connect&gt;</div><p className="eyebrow reveal"><span>07</span>{t.contact}</p><h2 className="reveal">{t.contactTitle}<br /><em>{t.contactAccent}</em></h2><a className="contact-link reveal" href={`mailto:${profile.email}`}>{profile.email}<ArrowUpRight /></a><div className="footer-meta"><span>© 2026 {profile.name}</span><div>{profile.socialLinks.map((link) => <a href={link.href} key={link.label}>{link.label}</a>)}</div><a href="#top">{t.back}</a></div></footer>
