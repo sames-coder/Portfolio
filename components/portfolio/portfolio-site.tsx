@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { ArrowDown, ArrowUpRight, Code2, Mail, Menu, Network, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowDown, ArrowUpRight, Code2, Mail, MapPin, Menu, Network, X } from "lucide-react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import HeroScene from "@/components/scene/hero-scene";
+import AndroidCoreScene from "@/components/scene/android-core-scene";
+import SkillConstellation from "@/components/scene/skill-constellation";
+import { AppProjectCard } from "@/components/portfolio/app-project-card";
 import { usePortfolio } from "@/components/content/portfolio-provider";
+import { contentTranslations, locales, translations, type Locale } from "@/i18n/translations";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -13,108 +16,95 @@ export function PortfolioSite() {
   const { content } = usePortfolio();
   const { profile } = content;
   const root = useRef<HTMLElement>(null);
+  const [locale, setLocale] = useState<Locale>("en");
+  const t = translations[locale];
+  const localized = contentTranslations[locale];
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem("portfolio-locale") as Locale | null;
+    if (saved && locales.some((item) => item.code === saved)) setLocale(saved);
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.lang = locale;
+    window.localStorage.setItem("portfolio-locale", locale);
+  }, [locale]);
 
   useEffect(() => {
     const context = gsap.context(() => {
-      gsap.from(".hero-copy > *", { opacity: 0, y: 32, duration: 1, stagger: 0.11, ease: "power3.out" });
-      gsap.utils.toArray<HTMLElement>(".reveal").forEach((element) => {
-        gsap.from(element, { opacity: 0, y: 48, duration: 0.9, ease: "power3.out", scrollTrigger: { trigger: element, start: "top 84%", once: true } });
-      });
+      gsap.from(".hero-copy > *, .profile-dock", { opacity: 0, y: 34, duration: 1, stagger: 0.1, ease: "power3.out" });
+      gsap.utils.toArray<HTMLElement>(".reveal").forEach((element) => gsap.from(element, { opacity: 0, y: 46, duration: 0.9, ease: "power3.out", scrollTrigger: { trigger: element, start: "top 86%", once: true } }));
+      gsap.to(".android-watermark", { xPercent: -18, ease: "none", scrollTrigger: { trigger: ".about-section", scrub: 1.2, start: "top bottom", end: "bottom top" } });
     }, root);
     return () => context.revert();
   }, []);
 
+  const chooseLocale = (next: Locale) => setLocale(next);
   const toggleMenu = () => document.documentElement.classList.toggle("menu-open");
 
-  return (
-    <main className="site-shell" ref={root}>
-      <header className="site-header">
-        <a className="brand" href="#top" aria-label="Portfolio home"><span className="brand-mark">{profile.initials}</span><span className="brand-copy">{profile.role}</span></a>
-        <nav aria-label="Primary navigation" className="desktop-nav">
-          <a href="#about">About</a><a href="#work">Work</a><a href="#experience">Experience</a><a href="#contact">Contact</a>
-        </nav>
-        <a className="availability" href={`mailto:${profile.email}`}><span /> {profile.availability}</a>
-        <button className="menu-toggle" onClick={toggleMenu} aria-label="Toggle navigation"><Menu className="menu-icon-open" /><X className="menu-icon-close" /></button>
-      </header>
+  return <main className="site-shell android-portfolio" ref={root}>
+    <header className="site-header advanced-header">
+      <a className="brand" href="#top" aria-label="Portfolio home"><span className="brand-mark">{profile.initials}</span><span className="brand-copy">{localized.role}</span></a>
+      <nav aria-label="Primary navigation" className="desktop-nav">{t.nav.map((label, index) => <a key={label} href={["#about", "#work", "#experience", "#skills", "#contact"][index]}>{label}</a>)}</nav>
+      <div className="header-tools"><div className="language-switcher" aria-label="Language">{locales.map((item) => <button key={item.code} className={locale === item.code ? "active" : ""} onClick={() => chooseLocale(item.code)}>{item.label}</button>)}</div><a className="availability" href={`mailto:${profile.email}`}><span /> {t.available}</a></div>
+      <button className="menu-toggle" onClick={toggleMenu} aria-label="Toggle navigation"><Menu className="menu-icon-open" /><X className="menu-icon-close" /></button>
+    </header>
 
-      <div className="mobile-menu">
-        {[["About", "#about"], ["Work", "#work"], ["Experience", "#experience"], ["Contact", "#contact"]].map(([label, href]) => <a key={href} href={href} onClick={toggleMenu}>{label}</a>)}
+    <div className="mobile-menu">{t.nav.map((label, index) => <a key={label} href={["#about", "#work", "#experience", "#skills", "#contact"][index]} onClick={toggleMenu}>{label}</a>)}<div className="mobile-languages">{locales.map((item) => <button key={item.code} className={locale === item.code ? "active" : ""} onClick={() => chooseLocale(item.code)}>{item.label}</button>)}</div></div>
+
+    <section id="top" className="hero android-hero" aria-labelledby="hero-title">
+      <div className="hero-grid" aria-hidden="true" /><span className="hero-vertical-label">Kotlin · Compose · Architecture · Mobile</span>
+      <div className="hero-copy">
+        <p className="eyebrow"><span>01</span>{t.portfolio}</p>
+        <h1 id="hero-title">{localized.heroLead}<span>{localized.heroAccent}</span></h1>
+        <p className="hero-intro">{localized.intro}</p>
+        <div className="hero-actions"><a className="primary-button" href="#work">{t.explore}</a><a className="text-link" href="#about">{t.meet}</a></div>
       </div>
+      <div className="scene-wrap android-scene" aria-label="Interactive Android mobile ecosystem"><AndroidCoreScene /><div className="scene-badge"><span>{t.drag}</span><span>{t.realtime}</span></div></div>
+      <aside className="profile-dock">
+        <div className="profile-mini-avatar">{profile.avatarUrl ? <img src={profile.avatarUrl} alt={profile.name} /> : <span>{profile.initials}</span>}</div>
+        <div><small>{t.about}</small><strong>{profile.name}</strong><span>{localized.role}</span></div>
+        <a href="#about" aria-label={t.meet}><ArrowDown size={17} /></a>
+      </aside>
+      <div className="hero-footer"><div className="socials"><a href={profile.socialLinks[0]?.href ?? "#"} aria-label="GitHub"><Code2 size={17} /></a><a href={profile.socialLinks[1]?.href ?? "#"} aria-label="LinkedIn"><Network size={17} /></a><a href={`mailto:${profile.email}`} aria-label="Email"><Mail size={17} /></a></div><span className="system-status"><i /> Android systems online</span></div>
+    </section>
 
-      <section id="top" className="hero" aria-labelledby="hero-title">
-        <div className="hero-grid" aria-hidden="true" />
-        <div className="hero-copy">
-          <p className="eyebrow"><span>01</span> Portfolio / 2026</p>
-          <h1 id="hero-title">{profile.heroLead}<span>{profile.heroAccent}</span></h1>
-          <p className="hero-intro">{profile.intro}</p>
-          <div className="hero-actions"><a className="primary-button" href="#work">Explore selected work</a><a className="text-link" href="#about">Meet the developer</a></div>
-        </div>
-        <div className="scene-wrap" aria-label="Interactive three-dimensional artwork"><HeroScene /><div className="scene-badge"><span>Drag to explore</span><span>WebGL / real-time</span></div></div>
-        <div className="hero-footer">
-          <div className="socials" aria-label="Social links">
-            <a href={profile.socialLinks[0]?.href ?? "#"} aria-label={profile.socialLinks[0]?.label ?? "Code profile"}><Code2 size={17} /></a>
-            <a href={profile.socialLinks[1]?.href ?? "#"} aria-label={profile.socialLinks[1]?.label ?? "Network profile"}><Network size={17} /></a>
-            <a href={`mailto:${profile.email}`} aria-label="Email"><Mail size={17} /></a>
-          </div>
-          <a className="scroll-cue" href="#about">Scroll to discover <ArrowDown size={15} /></a>
-        </div>
-      </section>
+    <section id="about" className="section about-section android-about">
+      <span className="android-watermark" aria-hidden="true">ANDROID</span>
+      <div className="section-index reveal"><p className="eyebrow"><span>02</span>{t.about}</p><p><MapPin size={13} /> {profile.location}</p></div>
+      <div className="about-layout">
+        <div className="portrait-panel reveal"><div className="portrait-frame">{profile.avatarUrl ? <img src={profile.avatarUrl} alt={`${profile.name} portrait`} /> : <div className="portrait-placeholder"><span>{profile.initials}</span><i /></div>}<div className="portrait-caption"><span>{profile.name}</span><small>{localized.role}</small></div></div><div className="portrait-orbit"><i /><span>Kotlin first</span></div></div>
+        <div className="about-content reveal"><p className="about-statement">{localized.about}</p><div className="about-quote"><span>“</span><p>{localized.philosophy}</p></div><p className="body-copy">{t.detail}</p></div>
+      </div>
+      <div className="stats reveal"><div><strong>{profile.yearsExperience}</strong><span>{t.practice}</span></div><div><strong>{profile.projectsDelivered}</strong><span>{t.shipped}</span></div><div><strong>100%</strong><span>{t.focus}<b>{t.focusValue}</b></span></div></div>
+    </section>
 
-      <section id="about" className="section about-section">
-        <div className="section-index reveal"><p className="eyebrow"><span>02</span> About</p><p>{profile.location}</p></div>
-        <div className="about-main reveal">
-          <p className="about-statement">{profile.about}</p>
-          <div className="about-detail">
-            <div className="avatar-frame">
-              {profile.avatarUrl ? <img src={profile.avatarUrl} alt={`${profile.name} portrait`} /> : <span>{profile.initials}</span>}
-              <small>Replace portrait in Content Studio</small>
-            </div>
-            <div><p className="quote">“{profile.philosophy}”</p><p className="body-copy">I care about the invisible details: how quickly a page responds, how naturally motion guides attention, and how well the system grows after launch.</p></div>
-          </div>
-        </div>
-        <div className="stats reveal"><div><strong>{profile.yearsExperience}</strong><span>Years of practice</span></div><div><strong>{profile.projectsDelivered}</strong><span>Projects delivered</span></div><div><strong>∞</strong><span>Curiosity</span></div></div>
-      </section>
+    <section id="work" className="section work-section android-work">
+      <div className="section-heading reveal"><p className="eyebrow"><span>03</span>{t.projects}</p><h2>{t.projectsTitle}<br /><em>{t.projectsAccent}</em></h2></div>
+      <div className="app-case-list">{content.projects.map((project, index) => <AppProjectCard project={project} index={index} hint={t.projectHint} viewLabel={t.viewCase} key={`${project.title}-${index}`} />)}</div>
+    </section>
 
-      <section id="work" className="section work-section">
-        <div className="section-heading reveal"><p className="eyebrow"><span>03</span> Selected work</p><h2>Projects with<br /><em>purpose &amp; presence.</em></h2></div>
-        <div className="project-list">
-          {content.projects.map((project, index) => (
-            <a className="project-card reveal" href={project.href} key={`${project.title}-${index}`} style={{ "--project-accent": project.accent } as React.CSSProperties}>
-              <div className="project-visual"><span className="project-number">0{index + 1}</span><div className="project-orbit"><i /><i /><i /></div><span className="project-year">{project.year}</span></div>
-              <div className="project-info"><div><p>{project.category}</p><h3>{project.title}</h3></div><p className="project-summary">{project.summary}</p><div className="project-stack">{project.stack.map((item) => <span key={item}>{item}</span>)}</div><ArrowUpRight className="project-arrow" /></div>
-            </a>
-          ))}
-        </div>
-      </section>
+    <section id="experience" className="section experience-section">
+      <div className="section-heading reveal"><p className="eyebrow"><span>04</span>{t.experience}</p><h2>{t.experienceTitle}<br /><em>{t.experienceAccent}</em></h2></div>
+      <div className="experience-rail">
+        {content.experience.map((item, index) => <article className={`experience-card reveal ${index === 0 ? "current" : ""}`} key={`${item.role}-${index}`}>
+          <div className="experience-side"><span className="company-logo">{item.logo ?? item.company.slice(0, 2)}</span><span className="experience-index">0{index + 1}</span></div>
+          <div className="experience-main"><div className="experience-meta"><span>{item.period}</span><span>{item.duration}</span><span>{item.location}</span></div><h3>{item.role}</h3><a href={item.companyUrl ?? "#"} className="experience-company">{item.company}<ArrowUpRight size={16} /></a><p className="company-about">{item.companyAbout}</p><p className="experience-summary">{item.summary}</p></div>
+          {index === 0 && <span className="current-badge"><i />{t.present}</span>}
+        </article>)}
+      </div>
+    </section>
 
-      <section id="skills" className="section skills-section">
-        <div className="section-heading reveal"><p className="eyebrow"><span>04</span> Capabilities</p><h2>Built across the<br /><em>whole product.</em></h2></div>
-        <div className="skill-grid">
-          {content.skills.map((group, index) => <div className="skill-column reveal" key={group.title}><span>0{index + 1}</span><h3>{group.title}</h3><ul>{group.skills.map((skill) => <li key={skill}>{skill}</li>)}</ul></div>)}
-        </div>
-      </section>
+    <section id="skills" className="section android-skills">
+      <div className="section-heading reveal"><p className="eyebrow"><span>05</span>{t.skills}</p><h2>{t.skillsTitle}<br /><em>{t.skillsAccent}</em></h2></div>
+      <div className="skills-system reveal"><div className="skills-canvas"><SkillConstellation /><span>{t.skillsHint}</span></div><div className="skill-stack">{content.skills.map((group, index) => <article key={group.title} style={{ "--skill-accent": group.accent ?? "#b9ff66" } as React.CSSProperties}><div><span>0{index + 1}</span><i /></div><h3>{group.title}</h3><ul>{group.skills.map((skill) => <li key={skill}>{skill}<span /></li>)}</ul></article>)}</div></div>
+    </section>
 
-      <section id="experience" className="section timeline-section">
-        <div className="section-heading reveal"><p className="eyebrow"><span>05</span> Experience</p><h2>A track record of<br /><em>shipping well.</em></h2></div>
-        <div className="timeline">
-          {content.experience.map((item, index) => <article className="timeline-row reveal" key={`${item.role}-${index}`}><span>{item.period}</span><div><h3>{item.role}</h3><p className="company">{item.company}</p></div><p>{item.summary}</p></article>)}
-        </div>
-      </section>
+    <section id="education" className="section education-section android-education">
+      <div className="section-index reveal"><p className="eyebrow"><span>06</span>{t.education}</p><p>{t.educationHint}</p></div>
+      <div className="education-grid">{content.education.map((item, index) => <article className="education-card reveal" key={`${item.degree}-${index}`}><div className="education-number">0{index + 1}</div><span>{item.period}</span><h3>{item.degree}</h3><p className="company">{item.school}</p><p>{item.note}</p><div className="education-line" /></article>)}</div>
+    </section>
 
-      <section id="education" className="section education-section">
-        <div className="section-index reveal"><p className="eyebrow"><span>06</span> Education</p><p>Formal foundations · constant evolution</p></div>
-        <div className="education-grid">
-          {content.education.map((item, index) => <article className="education-card reveal" key={`${item.degree}-${index}`}><span>{item.period}</span><h3>{item.degree}</h3><p className="company">{item.school}</p><p>{item.note}</p></article>)}
-        </div>
-      </section>
-
-      <footer id="contact" className="contact-section">
-        <div className="contact-glow" />
-        <p className="eyebrow reveal"><span>07</span> Start a conversation</p>
-        <h2 className="reveal">Have an idea?<br /><em>Let’s make it real.</em></h2>
-        <a className="contact-link reveal" href={`mailto:${profile.email}`}>{profile.email}<ArrowUpRight /></a>
-        <div className="footer-meta"><span>© 2026 {profile.name}</span><div>{profile.socialLinks.map((link) => <a href={link.href} key={link.label}>{link.label}</a>)}</div><a href="#top">Back to top</a></div>
-      </footer>
-    </main>
-  );
+    <footer id="contact" className="contact-section android-contact"><div className="contact-glow" /><div className="contact-code" aria-hidden="true">&lt;/connect&gt;</div><p className="eyebrow reveal"><span>07</span>{t.contact}</p><h2 className="reveal">{t.contactTitle}<br /><em>{t.contactAccent}</em></h2><a className="contact-link reveal" href={`mailto:${profile.email}`}>{profile.email}<ArrowUpRight /></a><div className="footer-meta"><span>© 2026 {profile.name}</span><div>{profile.socialLinks.map((link) => <a href={link.href} key={link.label}>{link.label}</a>)}</div><a href="#top">{t.back}</a></div></footer>
+  </main>;
 }

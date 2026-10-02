@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "JG — Creative Developer",
-  description: "Creative developer crafting expressive interfaces, scalable systems and immersive digital experiences.",
+  title: "JG — Android Product Engineer",
+  description: "Android developer crafting reliable, elegant mobile products with Kotlin, Jetpack Compose and scalable architecture.",
   icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
 };
 
