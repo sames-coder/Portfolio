@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-img-element -- Project artwork can be a browser-generated data URL. */
 
 import { useState } from "react";
 import { ArrowLeft, ArrowRight, ArrowUpRight } from "lucide-react";
@@ -10,13 +11,13 @@ export function AppProjectCard({ project, index, hint, viewLabel }: { project: P
   const move = (direction: number) => setActive((current) => (current + direction + screens.length) % screens.length);
   return <article className="app-case reveal" style={{ "--project-accent": project.accent } as React.CSSProperties}>
     <div className="app-case-copy">
-      <div className="app-identity"><span className="app-logo">{project.logo ?? project.title.slice(0, 2)}</span><div><small>{project.platform ?? "Android"} · {project.year}</small><h3>{project.title}</h3></div></div>
+      <div className="app-identity"><span className="app-logo">{project.logoImage ? <img src={project.logoImage} alt={`${project.title} logo`} /> : project.logo ?? project.title.slice(0, 2)}</span><div><small>{project.platform ?? "Android"} · {project.year}</small><h3>{project.title}</h3></div></div>
       <p className="app-category">{project.category}</p><p className="app-summary">{project.summary}</p>
       <div className="project-stack">{project.stack.map((item) => <span key={item}>{item}</span>)}</div>
       <a className="case-link" href={project.href}>{viewLabel}<ArrowUpRight size={17} /></a>
     </div>
     <div className="app-gallery">
-      <div className="gallery-top"><span>0{index + 1} / 0{3}</span><span>{hint}</span></div>
+      <div className="gallery-top"><span>0{index + 1} / 0{screens.length}</span><span>{hint}</span></div>
       <div className="phone-stage">
         {screens.map((screen, screenIndex) => {
           const relative = (screenIndex - active + screens.length) % screens.length;

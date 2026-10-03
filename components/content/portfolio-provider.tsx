@@ -8,6 +8,7 @@ import { loadPortfolio, savePortfolio } from "@/lib/portfolio-storage";
 type PortfolioContextValue = {
   content: PortfolioContent;
   setContent: (content: PortfolioContent) => void;
+  saveContent: () => void;
 };
 
 const PortfolioContext = createContext<PortfolioContextValue | null>(null);
@@ -16,15 +17,16 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
   const [content, setState] = useState(defaultPortfolio);
 
   useEffect(() => {
-    setState(loadPortfolio(defaultPortfolio));
+    const hydrate = window.setTimeout(() => setState(loadPortfolio(defaultPortfolio)), 0);
     const onUpdate = (event: Event) => setState((event as CustomEvent<PortfolioContent>).detail);
     window.addEventListener("portfolio-content-updated", onUpdate);
-    return () => window.removeEventListener("portfolio-content-updated", onUpdate);
+    return () => { window.clearTimeout(hydrate); window.removeEventListener("portfolio-content-updated", onUpdate); };
   }, []);
 
   const value = useMemo(() => ({
     content,
-    setContent: (next: PortfolioContent) => { setState(next); savePortfolio(next); },
+    setContent: setState,
+    saveContent: () => savePortfolio(content),
   }), [content]);
 
   return <PortfolioContext.Provider value={value}>{children}</PortfolioContext.Provider>;

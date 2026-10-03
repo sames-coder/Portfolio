@@ -1,9 +1,9 @@
 export type SocialLink = { label: string; href: string };
 export type SkillGroup = { title: string; skills: string[]; accent?: string };
-export type Experience = { period: string; duration?: string; role: string; company: string; companyAbout?: string; companyUrl?: string; location?: string; logo?: string; summary: string };
+export type Experience = { period: string; duration?: string; role: string; company: string; companyAbout?: string; companyUrl?: string; location?: string; logo?: string; logoImage?: string; summary: string };
 export type Education = { period: string; degree: string; school: string; note: string };
 export type ProjectScreenshot = { label: string; image?: string; tone: string };
-export type Project = { title: string; logo?: string; category: string; year: string; summary: string; stack: string[]; href: string; accent: string; screenshots?: ProjectScreenshot[]; platform?: string };
+export type Project = { title: string; logo?: string; logoImage?: string; category: string; year: string; summary: string; stack: string[]; href: string; accent: string; screenshots?: ProjectScreenshot[]; platform?: string };
 
 export type PortfolioContent = {
   profile: {

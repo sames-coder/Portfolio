@@ -1,109 +1,181 @@
 "use client";
+/* eslint-disable @next/next/no-img-element -- Local previews use browser-generated data URLs. */
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
-import { Download, Eye, Plus, RotateCcw, Trash2, Upload } from "lucide-react";
+import { Download, Eye, ImagePlus, Plus, RotateCcw, Save, Trash2, Upload, X } from "lucide-react";
+import { toast } from "sonner";
 import { PortfolioProvider, usePortfolio } from "@/components/content/portfolio-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Toaster } from "@/components/ui/sonner";
 import { defaultPortfolio } from "@/data/default-portfolio";
 import type { Education, Experience, PortfolioContent, Project, SkillGroup } from "@/domain/portfolio/types";
-import { clearPortfolio } from "@/lib/portfolio-storage";
+import { optimizeImage } from "@/lib/image-upload";
 
-const emptyProject: Project = { title: "New app", logo: "NA", platform: "Android", category: "App category", year: "2026", summary: "Project summary", stack: ["Kotlin", "Compose"], href: "#", accent: "#b9ff66", screenshots: [{ label: "Home", tone: "lime" }, { label: "Details", tone: "violet" }, { label: "Profile", tone: "blue" }] };
-const emptyExperience: Experience = { period: "2026 — Present", duration: "1 yr", role: "Android Developer", company: "Company", companyAbout: "Short company description.", companyUrl: "#", location: "Remote", logo: "CO", summary: "What you achieved in this role." };
-const emptyEducation: Education = { period: "2026", degree: "Program", school: "Institution", note: "What you studied." };
-const emptySkill: SkillGroup = { title: "New group", skills: ["Skill one", "Skill two"] };
+const emptyProject: Project = { title: "Yangi ilova", logo: "YA", platform: "Android", category: "Ilova kategoriyasi", year: "2026", summary: "Loyiha haqida qisqa va aniq ma’lumot.", stack: ["Kotlin", "Compose"], href: "#", accent: "#b9ff66", screenshots: [] };
+const emptyExperience: Experience = { period: "2026 — Hozir", duration: "1 yil", role: "Android Developer", company: "Kompaniya", companyAbout: "Kompaniya haqida qisqa ma’lumot.", companyUrl: "#", location: "Masofaviy", logo: "KO", summary: "Bu lavozimdagi asosiy natijalaringiz." };
+const emptyEducation: Education = { period: "2026", degree: "Yo‘nalish", school: "Ta’lim muassasasi", note: "O‘rgangan bilimlaringiz." };
+const emptySkill: SkillGroup = { title: "Yangi guruh", skills: ["Ko‘nikma 1", "Ko‘nikma 2"] };
 
-function Field({ label, value, onChange, multiline = false }: { label: string; value: string; onChange: (value: string) => void; multiline?: boolean }) {
-  return <label className="studio-field"><span>{label}</span>{multiline ? <Textarea value={value} onChange={(event) => onChange(event.target.value)} /> : <Input value={value} onChange={(event) => onChange(event.target.value)} />}</label>;
+function Field({ label, value, onChange, multiline = false, hint }: { label: string; value: string; onChange: (value: string) => void; multiline?: boolean; hint?: string }) {
+  return <label className="studio-field"><span>{label}</span>{multiline ? <Textarea value={value} onChange={(event) => onChange(event.target.value)} /> : <Input value={value} onChange={(event) => onChange(event.target.value)} />}{hint && <small>{hint}</small>}</label>;
+}
+
+function UploadField({ id, label, image, onUpload, onRemove, multiple = false }: { id: string; label: string; image?: string; onUpload: (files: FileList) => void; onRemove?: () => void; multiple?: boolean }) {
+  return <div className="upload-field"><span>{label}</span><div className="upload-control">{image ? <div className="upload-preview"><img src={image} alt="Yuklangan rasm" /><button type="button" onClick={onRemove} aria-label="Rasmni o‘chirish"><X /></button></div> : <div className="upload-placeholder"><ImagePlus /><small>PNG, JPG yoki WEBP</small></div>}<label htmlFor={id} className="upload-button"><Upload />{multiple ? "Rasmlarni tanlash" : image ? "Rasmni almashtirish" : "Rasm yuklash"}</label><input id={id} type="file" accept="image/png,image/jpeg,image/webp" multiple={multiple} hidden onChange={(event) => event.target.files && onUpload(event.target.files)} /></div></div>;
 }
 
 function StudioInner() {
-  const { content, setContent } = usePortfolio();
+  const { content, setContent, saveContent } = usePortfolio();
+  const [hasChanges, setHasChanges] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
-  const updateProfile = (key: keyof PortfolioContent["profile"], value: string) => setContent({ ...content, profile: { ...content.profile, [key]: value } });
+
+  const changeContent = (next: PortfolioContent) => { setContent(next); setHasChanges(true); };
+  const updateProfile = (key: keyof PortfolioContent["profile"], value: string) => changeContent({ ...content, profile: { ...content.profile, [key]: value } });
   const updateArray = <K extends "projects" | "experience" | "education" | "skills">(key: K, index: number, item: PortfolioContent[K][number]) => {
     const list = [...content[key]] as PortfolioContent[K];
     list[index] = item as never;
-    setContent({ ...content, [key]: list });
+    changeContent({ ...content, [key]: list });
   };
-  const removeItem = (key: "projects" | "experience" | "education" | "skills", index: number) => setContent({ ...content, [key]: content[key].filter((_, itemIndex) => itemIndex !== index) });
+  const removeItem = (key: "projects" | "experience" | "education" | "skills", index: number) => changeContent({ ...content, [key]: content[key].filter((_, itemIndex) => itemIndex !== index) });
+
+  const save = () => {
+    try { saveContent(); setHasChanges(false); toast.success("Barcha o‘zgarishlar saqlandi", { description: "Portfolio ma’lumotlari shu brauzerda yangilandi." }); }
+    catch { toast.error("Saqlash amalga oshmadi", { description: "Rasmlar hajmini kamaytirib, qayta urinib ko‘ring." }); }
+  };
   const exportContent = () => {
     const blob = new Blob([JSON.stringify(content, null, 2)], { type: "application/json" });
     const anchor = document.createElement("a"); anchor.href = URL.createObjectURL(blob); anchor.download = "portfolio-content.json"; anchor.click(); URL.revokeObjectURL(anchor.href);
+    toast.success("JSON nusxa yuklandi");
   };
   const importContent = async (file?: File) => {
     if (!file) return;
-    try { setContent(JSON.parse(await file.text()) as PortfolioContent); } catch { window.alert("This JSON file is not valid portfolio content."); }
+    try { changeContent(JSON.parse(await file.text()) as PortfolioContent); toast.info("Ma’lumotlar yuklandi", { description: "Tasdiqlash uchun Saqlash tugmasini bosing." }); }
+    catch { toast.error("JSON fayl noto‘g‘ri yoki buzilgan."); }
   };
-  const reset = () => { if (window.confirm("Restore the starter content? Your browser draft will be removed.")) { clearPortfolio(); setContent(defaultPortfolio); } };
+  const reset = () => {
+    if (!window.confirm("Boshlang‘ich ma’lumotlarni qaytarmoqchimisiz?")) return;
+    changeContent(defaultPortfolio);
+    toast.info("Boshlang‘ich ma’lumotlar tayyor", { description: "Tasdiqlash uchun Saqlash tugmasini bosing." });
+  };
+  const uploadAvatar = async (files: FileList) => {
+    try { updateProfile("avatarUrl", await optimizeImage(files[0], "avatar")); toast.success("Avatar tayyorlandi"); }
+    catch (error) { toast.error(error instanceof Error ? error.message : "Rasmni yuklab bo‘lmadi."); }
+  };
+  const uploadProjectLogo = async (project: Project, index: number, files: FileList) => {
+    try { updateArray("projects", index, { ...project, logoImage: await optimizeImage(files[0], "logo") }); }
+    catch (error) { toast.error(error instanceof Error ? error.message : "Logo yuklanmadi."); }
+  };
+  const uploadScreens = async (project: Project, index: number, files: FileList) => {
+    try {
+      const uploaded = await Promise.all(Array.from(files).map(async (file, screenIndex) => ({ label: file.name.replace(/\.[^.]+$/, ""), tone: ["lime", "violet", "blue", "orange"][screenIndex % 4], image: await optimizeImage(file, "screenshot") })));
+      updateArray("projects", index, { ...project, screenshots: [...(project.screenshots ?? []), ...uploaded] });
+      toast.success(`${uploaded.length} ta screenshot tayyorlandi`);
+    } catch (error) { toast.error(error instanceof Error ? error.message : "Screenshotlar yuklanmadi."); }
+  };
+  const uploadExperienceLogo = async (item: Experience, index: number, files: FileList) => {
+    try { updateArray("experience", index, { ...item, logoImage: await optimizeImage(files[0], "logo") }); }
+    catch (error) { toast.error(error instanceof Error ? error.message : "Logo yuklanmadi."); }
+  };
 
-  return (
+  return <>
     <main className="studio-shell">
       <aside className="studio-sidebar">
-        <div><span className="brand-mark">{content.profile.initials}</span><div><strong>Content Studio</strong><small>Local-first portfolio editor</small></div></div>
-        <p>Changes save instantly in this browser. Export the final JSON to keep a portable backup.</p>
+        <div><span className="brand-mark">{content.profile.initials}</span><div><strong>Portfolio boshqaruvi</strong><small>Mahalliy kontent muharriri</small></div></div>
+        <p>Ma’lumotlarni qulay tahrirlang, rasmlarni kompyuterdan yuklang va tayyor bo‘lganda saqlang.</p>
         <div className="studio-actions">
-          <Button asChild><Link href="/" target="_blank"><Eye /> Preview portfolio</Link></Button>
-          <Button variant="outline" onClick={exportContent}><Download /> Export JSON</Button>
-          <Button variant="outline" onClick={() => fileInput.current?.click()}><Upload /> Import JSON</Button>
+          <Button asChild><Link href="/" target="_blank"><Eye /> Portfolioni ko‘rish</Link></Button>
+          <Button variant="outline" onClick={exportContent}><Download /> JSON nusxa olish</Button>
+          <Button variant="outline" onClick={() => fileInput.current?.click()}><Upload /> JSON yuklash</Button>
           <input ref={fileInput} type="file" accept="application/json" hidden onChange={(event) => importContent(event.target.files?.[0])} />
-          <Button variant="ghost" onClick={reset}><RotateCcw /> Restore starter</Button>
+          <Button variant="ghost" onClick={reset}><RotateCcw /> Boshlang‘ich holat</Button>
         </div>
-        <div className="studio-note"><strong>No backend required</strong><span>Your content stays private on this device until you export and publish it.</span></div>
+        <div className="studio-note"><strong>Backend talab qilinmaydi</strong><span>Matn va rasmlar Saqlash tugmasi bosilganda ushbu brauzer xotirasiga yoziladi.</span></div>
       </aside>
 
       <section className="studio-workspace">
-        <header><div><p>Portfolio management</p><h1>Edit your story.</h1></div><span className="saved-state"><i /> Saved locally</span></header>
+        <header><div><p>Portfolio boshqaruvi</p><h1>Kontentni tahrirlash.</h1></div><div className={`saved-state ${hasChanges ? "unsaved" : ""}`}><i />{hasChanges ? "Saqlanmagan o‘zgarishlar" : "Barcha ma’lumot saqlangan"}</div></header>
         <Tabs defaultValue="profile" className="studio-tabs">
-          <TabsList><TabsTrigger value="profile">Profile</TabsTrigger><TabsTrigger value="projects">Projects</TabsTrigger><TabsTrigger value="experience">Experience</TabsTrigger><TabsTrigger value="education">Education</TabsTrigger><TabsTrigger value="skills">Skills</TabsTrigger></TabsList>
+          <TabsList><TabsTrigger value="profile">Profil</TabsTrigger><TabsTrigger value="projects">Loyihalar</TabsTrigger><TabsTrigger value="experience">Tajriba</TabsTrigger><TabsTrigger value="education">Ta’lim</TabsTrigger><TabsTrigger value="skills">Ko‘nikmalar</TabsTrigger></TabsList>
 
           <TabsContent value="profile" className="studio-panel">
-            <div className="panel-heading"><div><h2>Profile & hero</h2><p>The core identity and opening message visitors see first.</p></div></div>
+            <div className="panel-heading"><div><h2>Profil va bosh ekran</h2><p>Tashrifchi birinchi ko‘radigan asosiy ma’lumotlar.</p></div></div>
             <div className="studio-grid">
-              <Field label="Display name" value={content.profile.name} onChange={(v) => updateProfile("name", v)} />
-              <Field label="Initials" value={content.profile.initials} onChange={(v) => updateProfile("initials", v)} />
-              <Field label="Professional role" value={content.profile.role} onChange={(v) => updateProfile("role", v)} />
-              <Field label="Location" value={content.profile.location} onChange={(v) => updateProfile("location", v)} />
+              <div className="studio-span"><UploadField id="avatar-upload" label="Avatar rasmi" image={content.profile.avatarUrl} onUpload={uploadAvatar} onRemove={() => updateProfile("avatarUrl", "")} /></div>
+              <Field label="Ism va familiya" value={content.profile.name} onChange={(v) => updateProfile("name", v)} />
+              <Field label="Initsiallar" value={content.profile.initials} onChange={(v) => updateProfile("initials", v)} hint="Avatar bo‘lmaganda ko‘rsatiladi." />
+              <Field label="Professional yo‘nalish" value={content.profile.role} onChange={(v) => updateProfile("role", v)} />
+              <Field label="Joylashuv" value={content.profile.location} onChange={(v) => updateProfile("location", v)} />
               <Field label="Email" value={content.profile.email} onChange={(v) => updateProfile("email", v)} />
-              <Field label="Availability" value={content.profile.availability} onChange={(v) => updateProfile("availability", v)} />
-              <Field label="Hero first line" value={content.profile.heroLead} onChange={(v) => updateProfile("heroLead", v)} />
-              <Field label="Hero accent line" value={content.profile.heroAccent} onChange={(v) => updateProfile("heroAccent", v)} />
-              <Field label="Avatar image URL" value={content.profile.avatarUrl} onChange={(v) => updateProfile("avatarUrl", v)} />
-              <Field label="Years of experience" value={content.profile.yearsExperience} onChange={(v) => updateProfile("yearsExperience", v)} />
-              <Field label="Projects delivered" value={content.profile.projectsDelivered} onChange={(v) => updateProfile("projectsDelivered", v)} />
-              <Field label="Personal philosophy" value={content.profile.philosophy} onChange={(v) => updateProfile("philosophy", v)} />
-              <div className="studio-span"><Field label="Short introduction" value={content.profile.intro} onChange={(v) => updateProfile("intro", v)} multiline /></div>
-              <div className="studio-span"><Field label="About paragraph" value={content.profile.about} onChange={(v) => updateProfile("about", v)} multiline /></div>
+              <Field label="Ish uchun holat" value={content.profile.availability} onChange={(v) => updateProfile("availability", v)} />
+              <Field label="Hero — birinchi qator" value={content.profile.heroLead} onChange={(v) => updateProfile("heroLead", v)} />
+              <Field label="Hero — ajratilgan qator" value={content.profile.heroAccent} onChange={(v) => updateProfile("heroAccent", v)} />
+              <Field label="Tajriba yillari" value={content.profile.yearsExperience} onChange={(v) => updateProfile("yearsExperience", v)} />
+              <Field label="Yakunlangan loyihalar" value={content.profile.projectsDelivered} onChange={(v) => updateProfile("projectsDelivered", v)} />
+              <div className="studio-span"><Field label="Qisqa tanishtiruv" value={content.profile.intro} onChange={(v) => updateProfile("intro", v)} multiline /></div>
+              <div className="studio-span"><Field label="Men haqimda" value={content.profile.about} onChange={(v) => updateProfile("about", v)} multiline /></div>
+              <div className="studio-span"><Field label="Shaxsiy tamoyil" value={content.profile.philosophy} onChange={(v) => updateProfile("philosophy", v)} /></div>
             </div>
           </TabsContent>
 
           <TabsContent value="projects" className="studio-panel">
-            <div className="panel-heading"><div><h2>Selected projects</h2><p>Curate your strongest work and the story behind each build.</p></div><Button onClick={() => setContent({ ...content, projects: [...content.projects, emptyProject] })}><Plus /> Add project</Button></div>
-            <div className="editor-list">{content.projects.map((project, index) => <div className="editor-card" key={index}><div className="editor-card-title"><strong>0{index + 1} · {project.title}</strong><Button size="icon" variant="ghost" onClick={() => removeItem("projects", index)} aria-label="Remove project"><Trash2 /></Button></div><div className="studio-grid"><Field label="Title" value={project.title} onChange={(v) => updateArray("projects", index, { ...project, title: v })} /><Field label="App logo initials" value={project.logo ?? ""} onChange={(v) => updateArray("projects", index, { ...project, logo: v })} /><Field label="Platform" value={project.platform ?? "Android"} onChange={(v) => updateArray("projects", index, { ...project, platform: v })} /><Field label="Category" value={project.category} onChange={(v) => updateArray("projects", index, { ...project, category: v })} /><Field label="Year" value={project.year} onChange={(v) => updateArray("projects", index, { ...project, year: v })} /><Field label="Project URL" value={project.href} onChange={(v) => updateArray("projects", index, { ...project, href: v })} /><Field label="Accent color" value={project.accent} onChange={(v) => updateArray("projects", index, { ...project, accent: v })} /><Field label="Stack, comma separated" value={project.stack.join(", ")} onChange={(v) => updateArray("projects", index, { ...project, stack: v.split(",").map((item) => item.trim()).filter(Boolean) })} /><Field label="Screens: label|tone, comma separated" value={(project.screenshots ?? []).map((item) => `${item.label}|${item.tone}`).join(", ")} onChange={(v) => updateArray("projects", index, { ...project, screenshots: v.split(",").map((item) => { const [label, tone] = item.trim().split("|"); return { label: label || "Screen", tone: tone || "lime" }; }) })} /><div className="studio-span"><Field label="Summary" value={project.summary} onChange={(v) => updateArray("projects", index, { ...project, summary: v })} multiline /></div></div></div>)}</div>
+            <div className="panel-heading"><div><h2>Tanlangan loyihalar</h2><p>Ilova logosi, tafsilotlari va haqiqiy screenshotlarini kiriting.</p></div><Button onClick={() => changeContent({ ...content, projects: [...content.projects, emptyProject] })}><Plus /> Loyiha qo‘shish</Button></div>
+            <div className="editor-list">{content.projects.map((project, index) => <div className="editor-card" key={index}>
+              <div className="editor-card-title"><strong>0{index + 1} · {project.title}</strong><Button size="icon" variant="ghost" onClick={() => removeItem("projects", index)} aria-label="Loyihani o‘chirish"><Trash2 /></Button></div>
+              <div className="studio-grid">
+                <UploadField id={`project-logo-${index}`} label="Ilova logosi" image={project.logoImage} onUpload={(files) => uploadProjectLogo(project, index, files)} onRemove={() => updateArray("projects", index, { ...project, logoImage: "" })} />
+                <Field label="Logo uchun qisqa harflar" value={project.logo ?? ""} onChange={(v) => updateArray("projects", index, { ...project, logo: v })} hint="Logo rasmi bo‘lmaganda ishlatiladi." />
+                <Field label="Loyiha nomi" value={project.title} onChange={(v) => updateArray("projects", index, { ...project, title: v })} />
+                <Field label="Platforma" value={project.platform ?? "Android"} onChange={(v) => updateArray("projects", index, { ...project, platform: v })} />
+                <Field label="Kategoriya" value={project.category} onChange={(v) => updateArray("projects", index, { ...project, category: v })} />
+                <Field label="Yil" value={project.year} onChange={(v) => updateArray("projects", index, { ...project, year: v })} />
+                <Field label="Loyiha havolasi" value={project.href} onChange={(v) => updateArray("projects", index, { ...project, href: v })} />
+                <Field label="Aksent rang" value={project.accent} onChange={(v) => updateArray("projects", index, { ...project, accent: v })} />
+                <div className="studio-span"><Field label="Texnologiyalar (vergul bilan)" value={project.stack.join(", ")} onChange={(v) => updateArray("projects", index, { ...project, stack: v.split(",").map((item) => item.trim()).filter(Boolean) })} /></div>
+                <div className="studio-span"><Field label="Loyiha tavsifi" value={project.summary} onChange={(v) => updateArray("projects", index, { ...project, summary: v })} multiline /></div>
+                <div className="studio-span"><UploadField id={`project-screens-${index}`} label="Ilova screenshotlari" multiple onUpload={(files) => uploadScreens(project, index, files)} /></div>
+                {!!project.screenshots?.length && <div className="studio-span screen-manager">{project.screenshots.map((screen, screenIndex) => <div key={`${screen.label}-${screenIndex}`}>{screen.image ? <img src={screen.image} alt={screen.label} /> : <span>{screen.label}</span>}<Input value={screen.label} onChange={(event) => updateArray("projects", index, { ...project, screenshots: project.screenshots?.map((item, itemIndex) => itemIndex === screenIndex ? { ...item, label: event.target.value } : item) })} /><button type="button" onClick={() => updateArray("projects", index, { ...project, screenshots: project.screenshots?.filter((_, itemIndex) => itemIndex !== screenIndex) })}><Trash2 /></button></div>)}</div>}
+              </div>
+            </div>)}</div>
           </TabsContent>
 
           <TabsContent value="experience" className="studio-panel">
-            <div className="panel-heading"><div><h2>Experience</h2><p>Show roles, impact and progression.</p></div><Button onClick={() => setContent({ ...content, experience: [...content.experience, emptyExperience] })}><Plus /> Add role</Button></div>
-            <div className="editor-list">{content.experience.map((item, index) => <div className="editor-card" key={index}><div className="editor-card-title"><strong>{item.role}</strong><Button size="icon" variant="ghost" onClick={() => removeItem("experience", index)}><Trash2 /></Button></div><div className="studio-grid"><Field label="Period" value={item.period} onChange={(v) => updateArray("experience", index, { ...item, period: v })} /><Field label="Duration" value={item.duration ?? ""} onChange={(v) => updateArray("experience", index, { ...item, duration: v })} /><Field label="Role" value={item.role} onChange={(v) => updateArray("experience", index, { ...item, role: v })} /><Field label="Company" value={item.company} onChange={(v) => updateArray("experience", index, { ...item, company: v })} /><Field label="Company logo initials" value={item.logo ?? ""} onChange={(v) => updateArray("experience", index, { ...item, logo: v })} /><Field label="Location" value={item.location ?? ""} onChange={(v) => updateArray("experience", index, { ...item, location: v })} /><Field label="Company URL" value={item.companyUrl ?? ""} onChange={(v) => updateArray("experience", index, { ...item, companyUrl: v })} /><div className="studio-span"><Field label="About the company" value={item.companyAbout ?? ""} onChange={(v) => updateArray("experience", index, { ...item, companyAbout: v })} multiline /></div><div className="studio-span"><Field label="Your impact" value={item.summary} onChange={(v) => updateArray("experience", index, { ...item, summary: v })} multiline /></div></div></div>)}</div>
+            <div className="panel-heading"><div><h2>Ish tajribasi</h2><p>Lavozim, kompaniya va erishilgan natijalarni ko‘rsating.</p></div><Button onClick={() => changeContent({ ...content, experience: [...content.experience, emptyExperience] })}><Plus /> Tajriba qo‘shish</Button></div>
+            <div className="editor-list">{content.experience.map((item, index) => <div className="editor-card" key={index}>
+              <div className="editor-card-title"><strong>{item.role}</strong><Button size="icon" variant="ghost" onClick={() => removeItem("experience", index)} aria-label="Tajribani o‘chirish"><Trash2 /></Button></div>
+              <div className="studio-grid">
+                <UploadField id={`experience-logo-${index}`} label="Kompaniya logosi" image={item.logoImage} onUpload={(files) => uploadExperienceLogo(item, index, files)} onRemove={() => updateArray("experience", index, { ...item, logoImage: "" })} />
+                <Field label="Logo uchun qisqa harflar" value={item.logo ?? ""} onChange={(v) => updateArray("experience", index, { ...item, logo: v })} />
+                <Field label="Davr" value={item.period} onChange={(v) => updateArray("experience", index, { ...item, period: v })} />
+                <Field label="Davomiyligi" value={item.duration ?? ""} onChange={(v) => updateArray("experience", index, { ...item, duration: v })} />
+                <Field label="Lavozim" value={item.role} onChange={(v) => updateArray("experience", index, { ...item, role: v })} />
+                <Field label="Kompaniya" value={item.company} onChange={(v) => updateArray("experience", index, { ...item, company: v })} />
+                <Field label="Joylashuv" value={item.location ?? ""} onChange={(v) => updateArray("experience", index, { ...item, location: v })} />
+                <Field label="Kompaniya havolasi" value={item.companyUrl ?? ""} onChange={(v) => updateArray("experience", index, { ...item, companyUrl: v })} />
+                <div className="studio-span"><Field label="Kompaniya haqida" value={item.companyAbout ?? ""} onChange={(v) => updateArray("experience", index, { ...item, companyAbout: v })} multiline /></div>
+                <div className="studio-span"><Field label="Sizning natijangiz" value={item.summary} onChange={(v) => updateArray("experience", index, { ...item, summary: v })} multiline /></div>
+              </div>
+            </div>)}</div>
           </TabsContent>
 
           <TabsContent value="education" className="studio-panel">
-            <div className="panel-heading"><div><h2>Education</h2><p>Degrees, certifications and meaningful learning.</p></div><Button onClick={() => setContent({ ...content, education: [...content.education, emptyEducation] })}><Plus /> Add education</Button></div>
-            <div className="editor-list">{content.education.map((item, index) => <div className="editor-card" key={index}><div className="editor-card-title"><strong>{item.degree}</strong><Button size="icon" variant="ghost" onClick={() => removeItem("education", index)}><Trash2 /></Button></div><div className="studio-grid"><Field label="Period" value={item.period} onChange={(v) => updateArray("education", index, { ...item, period: v })} /><Field label="Program" value={item.degree} onChange={(v) => updateArray("education", index, { ...item, degree: v })} /><Field label="Institution" value={item.school} onChange={(v) => updateArray("education", index, { ...item, school: v })} /><div className="studio-span"><Field label="Note" value={item.note} onChange={(v) => updateArray("education", index, { ...item, note: v })} multiline /></div></div></div>)}</div>
+            <div className="panel-heading"><div><h2>Ta’lim</h2><p>Asosiy ta’lim, kurs va sertifikatlar.</p></div><Button onClick={() => changeContent({ ...content, education: [...content.education, emptyEducation] })}><Plus /> Ta’lim qo‘shish</Button></div>
+            <div className="editor-list">{content.education.map((item, index) => <div className="editor-card" key={index}><div className="editor-card-title"><strong>{item.degree}</strong><Button size="icon" variant="ghost" onClick={() => removeItem("education", index)}><Trash2 /></Button></div><div className="studio-grid"><Field label="Davr" value={item.period} onChange={(v) => updateArray("education", index, { ...item, period: v })} /><Field label="Yo‘nalish yoki kurs" value={item.degree} onChange={(v) => updateArray("education", index, { ...item, degree: v })} /><Field label="Ta’lim muassasasi" value={item.school} onChange={(v) => updateArray("education", index, { ...item, school: v })} /><div className="studio-span"><Field label="Izoh" value={item.note} onChange={(v) => updateArray("education", index, { ...item, note: v })} multiline /></div></div></div>)}</div>
           </TabsContent>
 
           <TabsContent value="skills" className="studio-panel">
-            <div className="panel-heading"><div><h2>Skills</h2><p>Group capabilities so they are easy to scan.</p></div><Button onClick={() => setContent({ ...content, skills: [...content.skills, emptySkill] })}><Plus /> Add group</Button></div>
-            <div className="editor-list">{content.skills.map((group, index) => <div className="editor-card" key={index}><div className="editor-card-title"><strong>{group.title}</strong><Button size="icon" variant="ghost" onClick={() => removeItem("skills", index)}><Trash2 /></Button></div><div className="studio-grid"><Field label="Group title" value={group.title} onChange={(v) => updateArray("skills", index, { ...group, title: v })} /><Field label="Skills, comma separated" value={group.skills.join(", ")} onChange={(v) => updateArray("skills", index, { ...group, skills: v.split(",").map((item) => item.trim()).filter(Boolean) })} /></div></div>)}</div>
+            <div className="panel-heading"><div><h2>Ko‘nikmalar</h2><p>Texnologiyalarni oson ko‘rinadigan guruhlarga ajrating.</p></div><Button onClick={() => changeContent({ ...content, skills: [...content.skills, emptySkill] })}><Plus /> Guruh qo‘shish</Button></div>
+            <div className="editor-list">{content.skills.map((group, index) => <div className="editor-card" key={index}><div className="editor-card-title"><strong>{group.title}</strong><Button size="icon" variant="ghost" onClick={() => removeItem("skills", index)}><Trash2 /></Button></div><div className="studio-grid"><Field label="Guruh nomi" value={group.title} onChange={(v) => updateArray("skills", index, { ...group, title: v })} /><Field label="Ko‘nikmalar (vergul bilan)" value={group.skills.join(", ")} onChange={(v) => updateArray("skills", index, { ...group, skills: v.split(",").map((item) => item.trim()).filter(Boolean) })} /></div></div>)}</div>
           </TabsContent>
         </Tabs>
+        <div className="studio-savebar"><div><strong>{hasChanges ? "O‘zgarishlar saqlanmagan" : "Portfolio yangilangan"}</strong><span>{hasChanges ? "Tayyor bo‘lganda barcha ma’lumotlarni saqlang." : "Oxirgi o‘zgarishlar brauzer xotirasida."}</span></div><Button onClick={save} disabled={!hasChanges}><Save /> Saqlash</Button></div>
       </section>
     </main>
-  );
+    <Toaster position="bottom-right" richColors closeButton />
+  </>;
 }
 
 export function ContentStudio() { return <PortfolioProvider><StudioInner /></PortfolioProvider>; }
