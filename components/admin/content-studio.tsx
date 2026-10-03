@@ -29,10 +29,23 @@ function UploadField({ id, label, image, onUpload, onRemove, multiple = false }:
 }
 
 function StudioInner({ localMode = false, onLogout }: { localMode?: boolean; onLogout?: () => void }) {
-  const { content, setContent, saveContent } = usePortfolio();
+  const { content, isHydrated, setContent, saveContent } = usePortfolio();
   const [hasChanges, setHasChanges] = useState(false);
+  const [needsInitialPublish, setNeedsInitialPublish] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (localMode || !isHydrated) return;
+    let active = true;
+    void fetch("/api/portfolio", { cache: "no-store", credentials: "same-origin" }).then((response) => {
+      if (!active || response.status !== 404) return;
+      setNeedsInitialPublish(true);
+      setHasChanges(true);
+      toast.info("Serverga birinchi nashr tayyor", { description: "Ushbu brauzerdagi kontentni barcha qurilmalarga chiqarish uchun Saqlash tugmasini bosing." });
+    }).catch(() => undefined);
+    return () => { active = false; };
+  }, [isHydrated, localMode]);
 
   const changeContent = (next: PortfolioContent) => { setContent(next); setHasChanges(true); };
   const updateProfile = (key: keyof PortfolioContent["profile"], value: string) => changeContent({ ...content, profile: { ...content.profile, [key]: value } });
@@ -61,6 +74,7 @@ function StudioInner({ localMode = false, onLogout }: { localMode?: boolean; onL
       const saved = await saveContent(optimized);
       setContent(saved);
       setHasChanges(false);
+      setNeedsInitialPublish(false);
       toast.success("Barcha o‘zgarishlar saqlandi", { description: "Rasmlar avtomatik optimallashtirildi va portfolio yangilandi." });
     } catch (error) {
       toast.error("Saqlash amalga oshmadi", { description: error instanceof Error ? error.message : "Brauzer ma’lumotlar bazasiga yozib bo‘lmadi." });
@@ -194,7 +208,7 @@ function StudioInner({ localMode = false, onLogout }: { localMode?: boolean; onL
             <div className="editor-list">{content.skills.map((group, index) => <div className="editor-card" key={index}><div className="editor-card-title"><strong>{group.title}</strong><Button size="icon" variant="ghost" onClick={() => removeItem("skills", index)}><Trash2 /></Button></div><div className="studio-grid"><Field label="Guruh nomi" value={group.title} onChange={(v) => updateArray("skills", index, { ...group, title: v })} /><Field label="Ko‘nikmalar (vergul bilan)" value={group.skills.join(", ")} onChange={(v) => updateArray("skills", index, { ...group, skills: v.split(",").map((item) => item.trim()).filter(Boolean) })} /></div></div>)}</div>
           </TabsContent>
         </Tabs>
-        <div className="studio-savebar"><div><strong>{isSaving ? "Serverga yuborilmoqda" : hasChanges ? "O‘zgarishlar saqlanmagan" : "Portfolio yangilangan"}</strong><span>{isSaving ? "Rasmlar optimallashtirilib, xavfsiz xotiraga yuklanmoqda." : hasChanges ? "Tayyor bo‘lganda barcha ma’lumotlarni saqlang." : localMode ? "Oxirgi o‘zgarishlar mahalliy xotirada." : "Oxirgi o‘zgarishlar barcha qurilmalar uchun saqlangan."}</span></div><Button onClick={save} disabled={!hasChanges || isSaving}><Save /> {isSaving ? "Saqlanmoqda…" : "Saqlash"}</Button></div>
+        <div className="studio-savebar"><div><strong>{isSaving ? "Serverga yuborilmoqda" : needsInitialPublish ? "Birinchi server nashri kutilmoqda" : hasChanges ? "O‘zgarishlar saqlanmagan" : "Portfolio yangilangan"}</strong><span>{isSaving ? "Rasmlar optimallashtirilib, xavfsiz xotiraga yuklanmoqda." : needsInitialPublish ? "Ushbu brauzerdagi kontentni barcha qurilmalarga chiqarish uchun saqlang." : hasChanges ? "Tayyor bo‘lganda barcha ma’lumotlarni saqlang." : localMode ? "Oxirgi o‘zgarishlar mahalliy xotirada." : "Oxirgi o‘zgarishlar barcha qurilmalar uchun saqlangan."}</span></div><Button onClick={save} disabled={!isHydrated || !hasChanges || isSaving}><Save /> {isSaving ? "Saqlanmoqda…" : needsInitialPublish ? "Serverga nashr qilish" : "Saqlash"}</Button></div>
       </section>
     </main>
   </>;
