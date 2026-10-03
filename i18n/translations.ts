@@ -7,8 +7,8 @@ export const locales: { code: Locale; label: string }[] = [
 export const translations = {
   en: {
     nav: ["About", "Projects", "Experience", "Skills", "Contact"], available: "Available for projects",
-    portfolio: "Android portfolio / 2026", explore: "Explore applications", meet: "About the developer", drag: "Drag the ecosystem", realtime: "Real-time 3D",
-    about: "About", aboutKicker: "Product-minded Android engineer", practice: "Years in Android", shipped: "Apps shipped", focus: "Primary focus", focusValue: "Mobile products", detail: "I care about performance, resilient architecture and the small interaction details that turn a functional app into a product people want to keep.",
+    portfolio: "Android developer portfolio / 2026", explore: "View selected work", meet: "About me", drag: "Rotate the Android", realtime: "Interactive 3D",
+    about: "About", aboutKicker: "Product-minded Android engineer", practice: "Years in Android", shipped: "Apps shipped", focus: "Primary focus", focusValue: "Mobile products", detail: "I work across the full Android lifecycle: translating business goals into maintainable Kotlin code, building adaptive UI systems, and improving quality through testing, performance work and disciplined delivery.", aboutProof: ["Product architecture", "Compose UI systems", "Reliable delivery"],
     projects: "Selected applications", projectsTitle: "Mobile products,", projectsAccent: "built for real life.", projectHint: "Swipe through app screens", viewCase: "View case study",
     experience: "Experience", experienceTitle: "Teams, products and", experienceAccent: "measurable impact.", present: "Current role",
     skills: "Android toolkit", skillsTitle: "A connected", skillsAccent: "engineering system.", skillsHint: "Move to explore the skill constellation",
@@ -17,8 +17,8 @@ export const translations = {
   },
   uz: {
     nav: ["Men haqimda", "Loyihalar", "Tajriba", "Ko‘nikmalar", "Aloqa"], available: "Yangi loyihalar uchun ochiq",
-    portfolio: "Android portfolio / 2026", explore: "Ilovalarni ko‘rish", meet: "Dasturchi haqida", drag: "Ekotizimni aylantiring", realtime: "Real-time 3D",
-    about: "Men haqimda", aboutKicker: "Mahsulotga yo‘naltirilgan Android muhandis", practice: "Android tajribasi", shipped: "Yaratilgan ilovalar", focus: "Asosiy yo‘nalish", focusValue: "Mobil mahsulotlar", detail: "Men tezlik, mustahkam arxitektura va oddiy ilovani foydalanuvchi sevib ishlatadigan mahsulotga aylantiruvchi mayda interaksiyalarga e’tibor beraman.",
+    portfolio: "Android dasturchi portfoliosi / 2026", explore: "Loyihalarni ko‘rish", meet: "Men haqimda", drag: "Androidni aylantiring", realtime: "Interaktiv 3D",
+    about: "Men haqimda", aboutKicker: "Mahsulotga yo‘naltirilgan Android muhandis", practice: "Android tajribasi", shipped: "Yaratilgan ilovalar", focus: "Asosiy yo‘nalish", focusValue: "Mobil mahsulotlar", detail: "Android mahsulotining to‘liq hayotiy siklida ishlayman: biznes maqsadlarini qo‘llab-quvvatlash oson Kotlin kodiga aylantiraman, moslashuvchan UI tizimlarini yarataman hamda test, unumdorlik va tartibli reliz jarayoni orqali sifatni oshiraman.", aboutProof: ["Mahsulot arxitekturasi", "Compose UI tizimlari", "Ishonchli reliz"],
     projects: "Tanlangan ilovalar", projectsTitle: "Haqiqiy hayot uchun", projectsAccent: "mobil mahsulotlar.", projectHint: "Ilova ekranlarini aylantiring", viewCase: "Loyiha tafsilotlari",
     experience: "Tajriba", experienceTitle: "Jamoalar, mahsulotlar va", experienceAccent: "o‘lchanadigan natija.", present: "Hozirgi faoliyat",
     skills: "Android texnologiyalari", skillsTitle: "Yagona mukammal", skillsAccent: "muhandislik tizimi.", skillsHint: "Ko‘nikmalar tizimini o‘rganish uchun harakatlantiring",
@@ -27,8 +27,8 @@ export const translations = {
   },
   ru: {
     nav: ["Обо мне", "Проекты", "Опыт", "Навыки", "Контакты"], available: "Открыт для новых проектов",
-    portfolio: "Android портфолио / 2026", explore: "Посмотреть приложения", meet: "О разработчике", drag: "Вращайте экосистему", realtime: "Real-time 3D",
-    about: "Обо мне", aboutKicker: "Android-инженер с продуктовым мышлением", practice: "Лет в Android", shipped: "Выпущено приложений", focus: "Главный фокус", focusValue: "Мобильные продукты", detail: "Мне важны производительность, надежная архитектура и детали взаимодействия, которые превращают функциональное приложение в любимый продукт.",
+    portfolio: "Портфолио Android-разработчика / 2026", explore: "Смотреть проекты", meet: "Обо мне", drag: "Вращайте Android", realtime: "Интерактивный 3D",
+    about: "Обо мне", aboutKicker: "Android-инженер с продуктовым мышлением", practice: "Лет в Android", shipped: "Выпущено приложений", focus: "Главный фокус", focusValue: "Мобильные продукты", detail: "Работаю со всем жизненным циклом Android-продукта: превращаю бизнес-цели в поддерживаемый Kotlin-код, создаю адаптивные UI-системы и повышаю качество через тестирование, оптимизацию и дисциплинированные релизы.", aboutProof: ["Архитектура продукта", "Compose UI-системы", "Надежный релиз"],
     projects: "Избранные приложения", projectsTitle: "Мобильные продукты", projectsAccent: "для реальной жизни.", projectHint: "Листайте экраны приложений", viewCase: "Открыть кейс",
     experience: "Опыт", experienceTitle: "Команды, продукты и", experienceAccent: "измеримый результат.", present: "Текущая роль",
     skills: "Android инструменты", skillsTitle: "Единая", skillsAccent: "инженерная система.", skillsHint: "Двигайте, чтобы изучить систему навыков",
@@ -39,10 +39,10 @@ export const translations = {
 
 export const contentTranslations = {
   en: {
-    role: "Android Product Engineer", heroLead: "Android apps.", heroAccent: "Reliable by design.",
-    intro: "I build production-ready Android applications with Kotlin, Jetpack Compose and clean, scalable architecture.",
-    about: "I design and engineer Android applications that feel native, fast and thoughtfully composed. From product architecture to the smallest motion detail, every decision is made to create software people trust and enjoy using.",
-    philosophy: "Complex engineering. Effortless experience.",
+    role: "Android Product Engineer", heroLead: "Android Developer.", heroAccent: "I build mobile products.",
+    intro: "I design and ship reliable Android applications with Kotlin, Jetpack Compose and clean architecture — from first architecture decisions to polished releases.",
+    about: "I turn product ideas into production-ready Android applications — shaping architecture, polished Compose interfaces and reliable releases through one focused engineering process.",
+    philosophy: "Clear architecture. Native experience. Reliable delivery.",
     projects: [
       { category: "Personal finance", summary: "A calm personal finance companion with instant insights, smart budgets and secure offline-first data." },
       { category: "Travel & discovery", summary: "An adaptive travel companion that keeps routes, places and essential trip details available everywhere." },
@@ -56,10 +56,10 @@ export const contentTranslations = {
     education: [{ degree: "BSc, Software Engineering", note: "Software architecture, distributed systems and human-computer interaction." }, { degree: "Continuous Learning", note: "Creative coding, real-time graphics, product strategy and emerging web standards." }],
   },
   uz: {
-    role: "Android Product Engineer", heroLead: "Android ilovalar.", heroAccent: "Ishonchlilik — asosida.",
-    intro: "Kotlin, Jetpack Compose va clean architecture asosida production darajadagi Android ilovalar yarataman.",
-    about: "Men tez, tabiiy va puxta o‘ylangan Android ilovalarni loyihalayman va ishlab chiqaman. Mahsulot arxitekturasidan eng kichik animatsiyagacha — har bir qaror odamlar ishonadigan va zavq bilan ishlatadigan dastur yaratishga xizmat qiladi.",
-    philosophy: "Murakkab muhandislik. Oson tajriba.",
+    role: "Android Product Engineer", heroLead: "Android dasturchi.", heroAccent: "Mobil mahsulotlar yarataman.",
+    intro: "Kotlin, Jetpack Compose va Clean Architecture asosida tez, barqaror va kengayuvchan Android ilovalarni loyihalayman hamda production’ga olib chiqaman.",
+    about: "Mahsulot g‘oyalarini production darajadagi Android ilovalarga aylantiraman — arxitektura, puxta Compose interfeyslari va ishonchli relizlarni yagona muhandislik jarayonida boshqaraman.",
+    philosophy: "Aniq arxitektura. Tabiiy tajriba. Ishonchli reliz.",
     projects: [
       { category: "Shaxsiy moliya", summary: "Tezkor tahlil, aqlli budjet va xavfsiz offline ma’lumotlarga ega sodda moliyaviy yordamchi." },
       { category: "Sayohat va kashfiyot", summary: "Yo‘nalishlar, joylar va muhim sayohat ma’lumotlarini istalgan joyda saqlaydigan moslashuvchan yordamchi." },
@@ -73,10 +73,10 @@ export const contentTranslations = {
     education: [{ degree: "Dasturiy injiniring bakalavri", note: "Dasturiy arxitektura, taqsimlangan tizimlar va inson-kompyuter o‘zaro aloqasi." }, { degree: "Doimiy ta’lim", note: "Creative coding, real-time grafika, mahsulot strategiyasi va yangi web standartlari." }],
   },
   ru: {
-    role: "Android Product Engineer", heroLead: "Android-приложения.", heroAccent: "Надежность в основе.",
-    intro: "Создаю production-ready Android-приложения на Kotlin и Jetpack Compose с чистой масштабируемой архитектурой.",
-    about: "Я проектирую Android-приложения, которые ощущаются быстрыми, нативными и продуманными. От архитектуры продукта до мельчайшей анимации — каждое решение помогает создавать программы, которым доверяют и которыми приятно пользоваться.",
-    philosophy: "Сложная инженерия. Легкий опыт.",
+    role: "Android Product Engineer", heroLead: "Android-разработчик.", heroAccent: "Создаю мобильные продукты.",
+    intro: "Проектирую и выпускаю надежные Android-приложения на Kotlin и Jetpack Compose с чистой масштабируемой архитектурой.",
+    about: "Превращаю продуктовые идеи в готовые к production Android-приложения — объединяю архитектуру, продуманные Compose-интерфейсы и надежные релизы в одном инженерном процессе.",
+    philosophy: "Ясная архитектура. Нативный опыт. Надежный релиз.",
     projects: [
       { category: "Личные финансы", summary: "Спокойный финансовый помощник с быстрыми подсказками, умными бюджетами и безопасной offline-first архитектурой." },
       { category: "Путешествия", summary: "Адаптивный гид, который сохраняет маршруты, места и важные детали поездки доступными везде." },

@@ -2,7 +2,7 @@
 /* eslint-disable @next/next/no-img-element -- Admin-managed images can be local data URLs or remote URLs. */
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowDown, ArrowUpRight, Code2, Mail, MapPin, Menu, Network, X } from "lucide-react";
+import { ArrowUpRight, Code2, Mail, MapPin, Menu, Network, X } from "lucide-react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import AndroidCoreScene from "@/components/scene/android-core-scene";
@@ -40,9 +40,11 @@ export function PortfolioSite() {
 
   useEffect(() => {
     const context = gsap.context(() => {
-      gsap.from(".hero-copy > *, .profile-dock", { opacity: 0, y: 34, duration: 1, stagger: 0.1, ease: "power3.out" });
+      gsap.from(".hero-copy > *", { opacity: 0, y: 28, duration: 0.85, stagger: 0.08, ease: "power3.out" });
       gsap.utils.toArray<HTMLElement>(".reveal").forEach((element) => gsap.from(element, { opacity: 0, y: 46, duration: 0.9, ease: "power3.out", scrollTrigger: { trigger: element, start: "top 86%", once: true } }));
       gsap.from(".about-signal i", { scaleX: 0, transformOrigin: "left", stagger: 0.12, duration: 1.1, ease: "power3.out", scrollTrigger: { trigger: ".about-signal", start: "top 82%", once: true } });
+      gsap.from(".portrait-depth", { rotateY: -11, rotateX: 6, scale: 0.94, duration: 1.25, ease: "power3.out", scrollTrigger: { trigger: ".about-layout", start: "top 78%", once: true } });
+      gsap.from(".about-principle", { opacity: 0, x: 24, stagger: 0.1, duration: 0.65, ease: "power3.out", scrollTrigger: { trigger: ".about-principles", start: "top 86%", once: true } });
     }, root);
     return () => context.revert();
   }, []);
@@ -66,24 +68,40 @@ export function PortfolioSite() {
         <p className="eyebrow"><span>01</span>{t.portfolio}</p>
         <h1 id="hero-title">{localizedHeroLead}<span>{localizedHeroAccent}</span></h1>
         <p className="hero-intro">{localizedIntro}</p>
+        <div className="hero-proof" aria-label="Professional summary"><div><strong>{profile.yearsExperience}</strong><span>{t.practice}</span></div><div><strong>{profile.projectsDelivered}</strong><span>{t.shipped}</span></div><div><strong>Kotlin</strong><span>Jetpack Compose</span></div></div>
         <div className="hero-actions"><a className="primary-button" href="#work">{t.explore}</a><a className="text-link" href="#about">{t.meet}</a></div>
       </div>
       <div className="scene-wrap android-scene" aria-label="Interactive premium Android mascot"><AndroidCoreScene /><div className="scene-badge"><span>{t.drag}</span><span>{t.realtime}</span></div></div>
-      <aside className="profile-dock">
-        <div className="profile-mini-avatar">{profile.avatarUrl ? <img src={profile.avatarUrl} alt={profile.name} /> : <span>{profile.initials}</span>}</div>
-        <div><small>{t.about}</small><strong>{profile.name}</strong><span>{localizedRole}</span></div>
-        <a href="#about" aria-label={t.meet}><ArrowDown size={17} /></a>
-      </aside>
       <div className="hero-footer"><div className="socials"><a href={profile.socialLinks[0]?.href ?? "#"} aria-label="GitHub"><Code2 size={17} /></a><a href={profile.socialLinks[1]?.href ?? "#"} aria-label="LinkedIn"><Network size={17} /></a><a href={`mailto:${profile.email}`} aria-label="Email"><Mail size={17} /></a></div><span className="system-status"><i /> Android systems online</span></div>
     </section>
 
     <section id="about" className="section about-section android-about">
+      <div className="about-atmosphere" aria-hidden="true"><i /><i /><span>ANDROID / PRODUCT / ENGINEERING</span></div>
       <div className="section-index reveal"><p className="eyebrow"><span>02</span>{t.about}</p><p><MapPin size={13} /> {profile.location}</p></div>
       <div className="about-layout">
-        <div className="portrait-panel reveal"><div className="portrait-frame">{profile.avatarUrl ? <img src={profile.avatarUrl} alt={`${profile.name} portrait`} /> : <div className="portrait-placeholder"><span>{profile.initials}</span><i /></div>}<div className="portrait-caption"><span>{profile.name}</span><small>{localizedRole}</small></div></div><div className="portrait-orbit"><i /><span>Kotlin first</span></div></div>
-        <div className="about-content reveal"><div className="about-kicker"><span>Android</span><i />{t.aboutKicker}</div><p className="about-statement">{localizedAbout}</p><div className="about-signal" aria-hidden="true"><i /><i /><i /></div><div className="about-quote"><span>“</span><p>{localizedPhilosophy}</p></div><p className="body-copy">{t.detail}</p></div>
+        <div className="portrait-panel reveal">
+          <div className="portrait-halo" aria-hidden="true"><i /><i /></div>
+          <div className="portrait-depth">
+            <div className="portrait-frame">
+              <div className="portrait-topline"><span>PROFILE / 2026</span><i /></div>
+              {profile.avatarUrl ? <img src={profile.avatarUrl} alt={`${profile.name} portrait`} /> : <div className="portrait-placeholder"><span>{profile.initials}</span><i /></div>}
+              <div className="portrait-scan" aria-hidden="true" />
+              <div className="portrait-caption"><span>{profile.name}</span><small>{localizedRole}</small></div>
+            </div>
+          </div>
+          <div className="portrait-chip portrait-chip-experience"><strong>{profile.yearsExperience}</strong><span>{t.practice}</span></div>
+          <div className="portrait-chip portrait-chip-stack"><i /> Kotlin · Compose</div>
+          <div className="portrait-orbit"><i /><span>Kotlin first</span></div>
+        </div>
+        <div className="about-content reveal">
+          <div className="about-kicker"><span>Android</span><i />{t.aboutKicker}</div>
+          <h2 className="about-statement">{localizedAbout}</h2>
+          <div className="about-signal" aria-hidden="true"><i /><i /><i /></div>
+          <p className="body-copy">{t.detail}</p>
+          <div className="about-principles">{t.aboutProof.map((item, index) => <div className="about-principle" key={item}><span>0{index + 1}</span><strong>{item}</strong></div>)}</div>
+          <div className="about-quote"><span>“</span><p>{localizedPhilosophy}</p></div>
+        </div>
       </div>
-      <div className="stats reveal"><div><strong>{profile.yearsExperience}</strong><span>{t.practice}</span></div><div><strong>{profile.projectsDelivered}</strong><span>{t.shipped}</span></div><div><strong>100%</strong><span>{t.focus}<b>{t.focusValue}</b></span></div></div>
     </section>
 
     <section id="work" className="section work-section android-work">
@@ -93,8 +111,8 @@ export function PortfolioSite() {
 
     <section id="experience" className="section experience-section">
       <div className="section-heading reveal"><p className="eyebrow"><span>04</span>{t.experience}</p><h2>{t.experienceTitle}<br /><em>{t.experienceAccent}</em></h2></div>
-      <div className="experience-rail">
-        {content.experience.map((item, index) => <article className={`experience-card reveal ${index === 0 ? "current" : ""}`} key={`${item.role}-${index}`}>
+      <div className={`experience-rail experience-count-${Math.min(content.experience.length, 3)}`}>
+        {content.experience.map((item, index) => <article className={`experience-card reveal ${index === 0 ? "current" : ""}`} data-number={`0${index + 1}`} key={`${item.role}-${index}`}>
           <div className="experience-side"><span className="company-logo">{item.logoImage ? <img src={item.logoImage} alt={`${item.company} logo`} /> : item.logo ?? item.company.slice(0, 2)}</span><span className="experience-index">0{index + 1}</span></div>
           <div className="experience-main"><div className="experience-meta"><span>{item.period}</span><span>{item.duration}</span><span>{item.location}</span></div><h3>{locale === "en" ? item.role : localized.experience[index]?.role ?? item.role}</h3><a href={item.companyUrl ?? "#"} className="experience-company">{item.company}<ArrowUpRight size={16} /></a><p className="company-about">{locale === "en" ? item.companyAbout : localized.experience[index]?.companyAbout ?? item.companyAbout}</p><p className="experience-summary">{locale === "en" ? item.summary : localized.experience[index]?.summary ?? item.summary}</p></div>
           {index === 0 && <span className="current-badge"><i />{t.present}</span>}

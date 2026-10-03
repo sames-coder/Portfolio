@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Toaster } from "@/components/ui/sonner";
 import { defaultPortfolio } from "@/data/default-portfolio";
 import type { Education, Experience, PortfolioContent, Project, SkillGroup } from "@/domain/portfolio/types";
-import { optimizeImage } from "@/lib/image-upload";
+import { optimizeDataUrl, optimizeImage } from "@/lib/image-upload";
 
 const emptyProject: Project = { title: "Yangi ilova", logo: "YA", platform: "Android", category: "Ilova kategoriyasi", year: "2026", summary: "Loyiha haqida qisqa va aniq ma’lumot.", stack: ["Kotlin", "Compose"], href: "#", accent: "#b9ff66", screenshots: [] };
 const emptyExperience: Experience = { period: "2026 — Hozir", duration: "1 yil", role: "Android Developer", company: "Kompaniya", companyAbout: "Kompaniya haqida qisqa ma’lumot.", companyUrl: "#", location: "Masofaviy", logo: "KO", summary: "Bu lavozimdagi asosiy natijalaringiz." };
@@ -31,6 +31,7 @@ function UploadField({ id, label, image, onUpload, onRemove, multiple = false }:
 function StudioInner() {
   const { content, setContent, saveContent } = usePortfolio();
   const [hasChanges, setHasChanges] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
   const changeContent = (next: PortfolioContent) => { setContent(next); setHasChanges(true); };
@@ -42,9 +43,29 @@ function StudioInner() {
   };
   const removeItem = (key: "projects" | "experience" | "education" | "skills", index: number) => changeContent({ ...content, [key]: content[key].filter((_, itemIndex) => itemIndex !== index) });
 
-  const save = () => {
-    try { saveContent(); setHasChanges(false); toast.success("Barcha o‘zgarishlar saqlandi", { description: "Portfolio ma’lumotlari shu brauzerda yangilandi." }); }
-    catch { toast.error("Saqlash amalga oshmadi", { description: "Rasmlar hajmini kamaytirib, qayta urinib ko‘ring." }); }
+  const compactImages = async (source: PortfolioContent): Promise<PortfolioContent> => ({
+    ...source,
+    profile: { ...source.profile, avatarUrl: await optimizeDataUrl(source.profile.avatarUrl, "avatar") ?? "" },
+    projects: await Promise.all(source.projects.map(async (project) => ({
+      ...project,
+      logoImage: await optimizeDataUrl(project.logoImage, "logo"),
+      screenshots: await Promise.all((project.screenshots ?? []).map(async (screen) => ({ ...screen, image: await optimizeDataUrl(screen.image, "screenshot") }))),
+    }))),
+    experience: await Promise.all(source.experience.map(async (item) => ({ ...item, logoImage: await optimizeDataUrl(item.logoImage, "logo") }))),
+  });
+  const save = async () => {
+    setIsSaving(true);
+    try {
+      const optimized = await compactImages(content);
+      setContent(optimized);
+      await saveContent(optimized);
+      setHasChanges(false);
+      toast.success("Barcha o‘zgarishlar saqlandi", { description: "Rasmlar avtomatik optimallashtirildi va portfolio yangilandi." });
+    } catch (error) {
+      toast.error("Saqlash amalga oshmadi", { description: error instanceof Error ? error.message : "Brauzer ma’lumotlar bazasiga yozib bo‘lmadi." });
+    } finally {
+      setIsSaving(false);
+    }
   };
   const exportContent = () => {
     const blob = new Blob([JSON.stringify(content, null, 2)], { type: "application/json" });
@@ -171,7 +192,7 @@ function StudioInner() {
             <div className="editor-list">{content.skills.map((group, index) => <div className="editor-card" key={index}><div className="editor-card-title"><strong>{group.title}</strong><Button size="icon" variant="ghost" onClick={() => removeItem("skills", index)}><Trash2 /></Button></div><div className="studio-grid"><Field label="Guruh nomi" value={group.title} onChange={(v) => updateArray("skills", index, { ...group, title: v })} /><Field label="Ko‘nikmalar (vergul bilan)" value={group.skills.join(", ")} onChange={(v) => updateArray("skills", index, { ...group, skills: v.split(",").map((item) => item.trim()).filter(Boolean) })} /></div></div>)}</div>
           </TabsContent>
         </Tabs>
-        <div className="studio-savebar"><div><strong>{hasChanges ? "O‘zgarishlar saqlanmagan" : "Portfolio yangilangan"}</strong><span>{hasChanges ? "Tayyor bo‘lganda barcha ma’lumotlarni saqlang." : "Oxirgi o‘zgarishlar brauzer xotirasida."}</span></div><Button onClick={save} disabled={!hasChanges}><Save /> Saqlash</Button></div>
+        <div className="studio-savebar"><div><strong>{isSaving ? "Rasmlar optimallashtirilmoqda" : hasChanges ? "O‘zgarishlar saqlanmagan" : "Portfolio yangilangan"}</strong><span>{isSaving ? "Screenshotlar sifatni saqlagan holda siqilmoqda." : hasChanges ? "Tayyor bo‘lganda barcha ma’lumotlarni saqlang." : "Oxirgi o‘zgarishlar brauzer xotirasida."}</span></div><Button onClick={save} disabled={!hasChanges || isSaving}><Save /> {isSaving ? "Saqlanmoqda…" : "Saqlash"}</Button></div>
       </section>
     </main>
     <Toaster position="bottom-right" richColors closeButton />
