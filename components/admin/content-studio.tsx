@@ -1,9 +1,9 @@
 "use client";
 /* eslint-disable @next/next/no-img-element -- Local previews use browser-generated data URLs. */
 
-import { useRef, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Download, Eye, ImagePlus, Plus, RotateCcw, Save, Trash2, Upload, X } from "lucide-react";
+import { Download, Eye, ImagePlus, LockKeyhole, LogOut, Plus, RotateCcw, Save, ShieldCheck, Trash2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { PortfolioProvider, usePortfolio } from "@/components/content/portfolio-provider";
 import { Button } from "@/components/ui/button";
@@ -28,7 +28,7 @@ function UploadField({ id, label, image, onUpload, onRemove, multiple = false }:
   return <div className="upload-field"><span>{label}</span><div className="upload-control">{image ? <div className="upload-preview"><img src={image} alt="Yuklangan rasm" /><button type="button" onClick={onRemove} aria-label="Rasmni o‘chirish"><X /></button></div> : <div className="upload-placeholder"><ImagePlus /><small>PNG, JPG yoki WEBP</small></div>}<label htmlFor={id} className="upload-button"><Upload />{multiple ? "Rasmlarni tanlash" : image ? "Rasmni almashtirish" : "Rasm yuklash"}</label><input id={id} type="file" accept="image/png,image/jpeg,image/webp" multiple={multiple} hidden onChange={(event) => event.target.files && onUpload(event.target.files)} /></div></div>;
 }
 
-function StudioInner() {
+function StudioInner({ localMode = false, onLogout }: { localMode?: boolean; onLogout?: () => void }) {
   const { content, setContent, saveContent } = usePortfolio();
   const [hasChanges, setHasChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -58,7 +58,8 @@ function StudioInner() {
     try {
       const optimized = await compactImages(content);
       setContent(optimized);
-      await saveContent(optimized);
+      const saved = await saveContent(optimized);
+      setContent(saved);
       setHasChanges(false);
       toast.success("Barcha o‘zgarishlar saqlandi", { description: "Rasmlar avtomatik optimallashtirildi va portfolio yangilandi." });
     } catch (error) {
@@ -105,16 +106,17 @@ function StudioInner() {
   return <>
     <main className="studio-shell">
       <aside className="studio-sidebar">
-        <div><span className="brand-mark">{content.profile.initials}</span><div><strong>Portfolio boshqaruvi</strong><small>Mahalliy kontent muharriri</small></div></div>
-        <p>Ma’lumotlarni qulay tahrirlang, rasmlarni kompyuterdan yuklang va tayyor bo‘lganda saqlang.</p>
+        <div><span className="brand-mark">{content.profile.initials}</span><div><strong>Portfolio boshqaruvi</strong><small>{localMode ? "Mahalliy ishlab chiqish rejimi" : "Xavfsiz server muharriri"}</small></div></div>
+        <p>Ma’lumotlarni tahrirlang, rasmlarni kompyuterdan yuklang va barcha qurilmalar uchun bitta umumiy nusxani saqlang.</p>
         <div className="studio-actions">
           <Button asChild><Link href="/" target="_blank"><Eye /> Portfolioni ko‘rish</Link></Button>
           <Button variant="outline" onClick={exportContent}><Download /> JSON nusxa olish</Button>
           <Button variant="outline" onClick={() => fileInput.current?.click()}><Upload /> JSON yuklash</Button>
           <input ref={fileInput} type="file" accept="application/json" hidden onChange={(event) => importContent(event.target.files?.[0])} />
           <Button variant="ghost" onClick={reset}><RotateCcw /> Boshlang‘ich holat</Button>
+          {onLogout && <Button variant="ghost" onClick={onLogout}><LogOut /> Tizimdan chiqish</Button>}
         </div>
-        <div className="studio-note"><strong>Backend talab qilinmaydi</strong><span>Matn va rasmlar Saqlash tugmasi bosilganda ushbu brauzer xotirasiga yoziladi.</span></div>
+        <div className="studio-note"><strong>{localMode ? "Mahalliy rejim" : "Netlify Blobs faol"}</strong><span>{localMode ? "Ma’lumotlar faqat ushbu brauzerning IndexedDB xotirasiga yoziladi." : "Matn va rasmlar xavfsiz server xotirasiga yozilib, barcha tashrifchilarga bir xil ko‘rsatiladi."}</span></div>
       </aside>
 
       <section className="studio-workspace">
@@ -192,11 +194,88 @@ function StudioInner() {
             <div className="editor-list">{content.skills.map((group, index) => <div className="editor-card" key={index}><div className="editor-card-title"><strong>{group.title}</strong><Button size="icon" variant="ghost" onClick={() => removeItem("skills", index)}><Trash2 /></Button></div><div className="studio-grid"><Field label="Guruh nomi" value={group.title} onChange={(v) => updateArray("skills", index, { ...group, title: v })} /><Field label="Ko‘nikmalar (vergul bilan)" value={group.skills.join(", ")} onChange={(v) => updateArray("skills", index, { ...group, skills: v.split(",").map((item) => item.trim()).filter(Boolean) })} /></div></div>)}</div>
           </TabsContent>
         </Tabs>
-        <div className="studio-savebar"><div><strong>{isSaving ? "Rasmlar optimallashtirilmoqda" : hasChanges ? "O‘zgarishlar saqlanmagan" : "Portfolio yangilangan"}</strong><span>{isSaving ? "Screenshotlar sifatni saqlagan holda siqilmoqda." : hasChanges ? "Tayyor bo‘lganda barcha ma’lumotlarni saqlang." : "Oxirgi o‘zgarishlar brauzer xotirasida."}</span></div><Button onClick={save} disabled={!hasChanges || isSaving}><Save /> {isSaving ? "Saqlanmoqda…" : "Saqlash"}</Button></div>
+        <div className="studio-savebar"><div><strong>{isSaving ? "Serverga yuborilmoqda" : hasChanges ? "O‘zgarishlar saqlanmagan" : "Portfolio yangilangan"}</strong><span>{isSaving ? "Rasmlar optimallashtirilib, xavfsiz xotiraga yuklanmoqda." : hasChanges ? "Tayyor bo‘lganda barcha ma’lumotlarni saqlang." : localMode ? "Oxirgi o‘zgarishlar mahalliy xotirada." : "Oxirgi o‘zgarishlar barcha qurilmalar uchun saqlangan."}</span></div><Button onClick={save} disabled={!hasChanges || isSaving}><Save /> {isSaving ? "Saqlanmoqda…" : "Saqlash"}</Button></div>
       </section>
     </main>
-    <Toaster position="bottom-right" richColors closeButton />
   </>;
 }
 
-export function ContentStudio() { return <PortfolioProvider><StudioInner /></PortfolioProvider>; }
+type SessionState = "checking" | "authenticated" | "signed-out" | "unconfigured" | "local";
+
+function StudioAccess() {
+  const [state, setState] = useState<SessionState>("checking");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    void fetch("/api/admin/session", { cache: "no-store", credentials: "same-origin" })
+      .then(async (response) => {
+        if (response.status === 404 && ["localhost", "127.0.0.1"].includes(window.location.hostname)) return { local: true };
+        if (!response.ok) throw new Error("Admin sessiyasini tekshirib bo‘lmadi.");
+        return await response.json() as { authenticated?: boolean; configured?: boolean };
+      })
+      .then((session) => {
+        if (!active) return;
+        if ("local" in session) setState("local");
+        else if (!session.configured) setState("unconfigured");
+        else setState(session.authenticated ? "authenticated" : "signed-out");
+      })
+      .catch((reason: unknown) => {
+        if (!active) return;
+        setError(reason instanceof Error ? reason.message : "Admin serveriga ulanib bo‘lmadi.");
+        setState("signed-out");
+      });
+    return () => { active = false; };
+  }, []);
+
+  const login = async (event: FormEvent) => {
+    event.preventDefault();
+    setError("");
+    setIsSubmitting(true);
+    try {
+      const response = await fetch("/api/admin/session", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+      const body = await response.json().catch(() => ({})) as { error?: string };
+      if (!response.ok) throw new Error(body.error ?? "Tizimga kirib bo‘lmadi.");
+      setPassword("");
+      setState("authenticated");
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Tizimga kirib bo‘lmadi.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const logout = async () => {
+    await fetch("/api/admin/session", { method: "DELETE", credentials: "same-origin" }).catch(() => undefined);
+    setState("signed-out");
+  };
+
+  if (state === "authenticated") return <StudioInner onLogout={logout} />;
+  if (state === "local") return <StudioInner localMode />;
+
+  return <main className="studio-auth-shell">
+    <section className="studio-auth-card">
+      <div className="studio-auth-icon">{state === "unconfigured" ? <ShieldCheck /> : <LockKeyhole />}</div>
+      <p>Portfolio boshqaruvi</p>
+      <h1>{state === "checking" ? "Tekshirilmoqda…" : state === "unconfigured" ? "Server sozlamasi kerak." : "Admin panelga kirish."}</h1>
+      {state === "unconfigured" ? <>
+        <span>Netlify’da <code>PORTFOLIO_ADMIN_PASSWORD</code> va <code>PORTFOLIO_SESSION_SECRET</code> environment variable’larini kiriting, so‘ng saytni qayta deploy qiling.</span>
+      </> : state === "checking" ? <span>Xavfsiz sessiya holati aniqlanmoqda.</span> : <form onSubmit={login}>
+        <label htmlFor="admin-password">Admin paroli</label>
+        <Input id="admin-password" type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Parolni kiriting" required />
+        {error && <div className="studio-auth-error">{error}</div>}
+        <Button type="submit" disabled={isSubmitting || !password}><LockKeyhole /> {isSubmitting ? "Tekshirilmoqda…" : "Tizimga kirish"}</Button>
+      </form>}
+      <Link href="/"><Eye /> Portfolioga qaytish</Link>
+    </section>
+  </main>;
+}
+
+export function ContentStudio() { return <PortfolioProvider><StudioAccess /><Toaster position="bottom-right" richColors closeButton /></PortfolioProvider>; }
